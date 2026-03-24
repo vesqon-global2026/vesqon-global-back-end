@@ -81,7 +81,13 @@ ${street}, ${apartment}, ${city}, ${state}, ${zip}, ${country}
         : []
     };
 
-    await transporter.sendMail(mailOptions);
+    try {
+  await transporter.sendMail(mailOptions);
+  console.log("✅ Career email sent");
+} catch (emailError) {
+  console.error("❌ Career email failed:", emailError);
+  return res.status(500).json({ message: "Email sending failed" });
+}
 
     res.json({ message: "Application sent successfully!" });
 
@@ -119,18 +125,26 @@ app.post("/api/contact", async (req, res) => {
       },
     });
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: process.env.EMAIL_TO,
-      subject: `Contact Form: ${subject || "No Subject"}`,
-      text: `
+    try {
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to: process.env.EMAIL_TO,
+    subject: `Contact Form: ${subject || "No Subject"}`,
+    text: `
 Name: ${name}
 Email: ${email}
 
 Message:
 ${message}
 `,
-    });
+  });
+
+  console.log("✅ Email sent successfully");
+
+} catch (emailError) {
+  console.error("❌ Email failed:", emailError);
+  return res.status(500).json({ message: "Email sending failed" });
+}
 
     res.status(200).json({ message: "Message sent & saved successfully!" });
 
