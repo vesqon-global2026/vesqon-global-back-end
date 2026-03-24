@@ -12,9 +12,21 @@ dotenv.config();
 const app = express();
 const upload = multer({ dest: "uploads/" });
 app.use(cors({
-  origin: ["https://vesqon.com", "https://www.vesqon.com"],
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      "https://vesqon.com",
+      "https://www.vesqon.com"
+    ];
+
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("CORS not allowed"));
+    }
+  },
+  credentials: true
 }));
-app.use(bodyParser.json());
+app.use(cors());
 
 mongoose.connect(process.env.MONGO_URI, {
   family: 4
