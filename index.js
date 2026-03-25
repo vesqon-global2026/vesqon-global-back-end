@@ -97,10 +97,7 @@ ${street}, ${apartment}, ${city}, ${state}, ${zip}, ${country}
 
     console.log("✅ Career email sent");
 
-    // ✅ Delete file after sending
-    if (file) {
-      fs.unlinkSync(file.path);
-    }
+   
 
     res.json({ message: "Application sent successfully!" });
 
