@@ -77,11 +77,9 @@ app.post("/api/careers", upload.single("cv"), async (req, res) => {
 
       attachments.push({
         content: fileContent,
-        name: file.originalname,
-        type: file.mimetype // ⭐ important
+        name: file.originalname
       });
     }
-
     // ✅ Send Email
     await tranEmailApi.sendTransacEmail({
       sender: {
@@ -99,10 +97,15 @@ Phone: ${phone}
 Address:
 ${street}, ${apartment}, ${city}, ${state}, ${zip}, ${country}
 `,
-      attachments: attachments
+      attachment: attachments
     });
-
+      
     console.log("✅ Career email sent");
+     /* ===== DELETE FILE AFTER SEND ===== */
+    if (file) {
+      fs.unlinkSync(file.path);
+    }
+
 
     res.json({ message: "Application sent successfully!" });
 
