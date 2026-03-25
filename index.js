@@ -56,22 +56,18 @@ app.post("/api/careers", upload.single("cv"), async (req, res) => {
 
     await newApplication.save();
 
-   const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
+  const transporter = nodemailer.createTransport({
+  host: "smtp-relay.brevo.com",
   port: 587,
   secure: false,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
-  },
-  tls: {
-    rejectUnauthorized: false
-  },
-  family: 4
+  }
 });
 
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: "vgweb20@gmail.com",
       to: process.env.EMAIL_TO,
       subject: "New Career Application",
       text: `
@@ -128,22 +124,18 @@ app.post("/api/contact", async (req, res) => {
     await newContact.save();
 
     // ✅ Send Email
-   const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
+  const transporter = nodemailer.createTransport({
+  host: "smtp-relay.brevo.com",
   port: 587,
   secure: false,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
-  },
-  tls: {
-    rejectUnauthorized: false
-  },
-  family: 4
+  }
 });
     try {
   await transporter.sendMail({
-    from: process.env.EMAIL_USER,
+  from: "vgweb20@gmail.com",
     to: process.env.EMAIL_TO,
     subject: `Contact Form: ${subject || "No Subject"}`,
     text: `
