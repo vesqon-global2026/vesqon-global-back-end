@@ -10,10 +10,12 @@ import Contact from "./models/Contact.js";
 dotenv.config();
 
 const app = express();
+app.use(express.json());
 const upload = multer({ dest: "uploads/" });
 app.use(cors({
   origin: function (origin, callback) {
     const allowedOrigins = [
+       "http://localhost:5173",  
       "https://vesqon.com",
       "https://www.vesqon.com"
     ];
@@ -26,7 +28,6 @@ app.use(cors({
   },
   credentials: true
 }));
-app.use(cors());
 
 mongoose.connect(process.env.MONGO_URI, {
   family: 4
