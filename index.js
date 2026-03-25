@@ -17,7 +17,10 @@ apiKey.apiKey = process.env.BREVO_API_KEY;
 const tranEmailApi = new SibApiV3Sdk.TransactionalEmailsApi();
 const app = express();
 app.use(express.json());
-const upload = multer({ dest: "uploads/" });
+const upload = multer({
+  dest: "uploads/",
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB
+});
 app.use(cors({
   origin: [
     // "http://localhost:5173",
@@ -41,6 +44,8 @@ mongoose.connect(process.env.MONGO_URI, {
 app.post("/api/careers", upload.single("cv"), async (req, res) => {
   const { name, email, phone, street, apartment, city, state, zip, country } = req.body;
   const file = req.file;
+
+  console.log("File:", file); // 🔍 debug
 
   if (!name || !email) {
     return res.status(400).json({ message: "Name and Email are required." });
@@ -67,18 +72,20 @@ app.post("/api/careers", upload.single("cv"), async (req, res) => {
     let attachments = [];
 
     if (file) {
-      const fileContent = fs.readFileSync(file.path, { encoding: "base64" });
+      const fileBuffer = await fs.promises.readFile(file.path);
+      const fileContent = fileBuffer.toString("base64");
 
       attachments.push({
         content: fileContent,
-        name: file.originalname
+        name: file.originalname,
+        type: file.mimetype // ⭐ important
       });
     }
 
     // ✅ Send Email
     await tranEmailApi.sendTransacEmail({
       sender: {
-        email: "vgweb20@gmail.com", // ⚠️ must be verified in Brevo
+        email: "vgweb20@gmail.com",
         name: "Vesqon"
       },
       to: process.env.EMAIL_TO.split(",").map(e => ({ email: e.trim() })),
@@ -96,8 +103,6 @@ ${street}, ${apartment}, ${city}, ${state}, ${zip}, ${country}
     });
 
     console.log("✅ Career email sent");
-
-   
 
     res.json({ message: "Application sent successfully!" });
 
