@@ -34,8 +34,10 @@ mongoose.connect(process.env.MONGO_URI, {
 
 
 // POST endpoint to receive form data
+// ==============================
+// 🚀 CAREERS API (WITH CV FILE)
+// ==============================
 app.post("/api/careers", upload.single("cv"), async (req, res) => {
-
   const { name, email, phone, street, apartment, city, state, zip, country } = req.body;
   const file = req.file;
 
@@ -60,33 +62,43 @@ app.post("/api/careers", upload.single("cv"), async (req, res) => {
 
     await newApplication.save();
 
-    // ✅ Send Email via Brevo API
-    try {
-      await tranEmailApi.sendTransacEmail({
-        sender: {
-          email: "vgweb20@gmail.com",
-          name: "Vesqon"
-        },
-        to: [
-          { email: process.env.EMAIL_TO }
-        ],
-        subject: "New Career Application",
-         replyTo: { email: email },
-        textContent: `
+    // ✅ Prepare attachment
+    let attachments = [];
+
+    if (file) {
+      const fileContent = fs.readFileSync(file.path, { encoding: "base64" });
+
+      attachments.push({
+        content: fileContent,
+        name: file.originalname
+      });
+    }
+
+    // ✅ Send Email
+    await tranEmailApi.sendTransacEmail({
+      sender: {
+        email: "vgweb20@gmail.com", // ⚠️ must be verified in Brevo
+        name: "Vesqon"
+      },
+      to: process.env.EMAIL_TO.split(",").map(e => ({ email: e.trim() })),
+      replyTo: { email: email },
+      subject: "New Career Application",
+      textContent: `
 Name: ${name}
 Email: ${email}
 Phone: ${phone}
 
 Address:
 ${street}, ${apartment}, ${city}, ${state}, ${zip}, ${country}
-`
-      });
+`,
+      attachments: attachments
+    });
 
-      console.log("✅ Career email sent");
+    console.log("✅ Career email sent");
 
-    } catch (emailError) {
-      console.error("❌ Career email failed:", emailError);
-      return res.status(500).json({ message: "Email sending failed" });
+    // ✅ Delete file after sending
+    if (file) {
+      fs.unlinkSync(file.path);
     }
 
     res.json({ message: "Application sent successfully!" });
@@ -96,6 +108,7 @@ ${street}, ${apartment}, ${city}, ${state}, ${zip}, ${country}
     res.status(500).json({ message: "Something went wrong." });
   }
 });
+
 
 app.post("/api/contact", async (req, res) => {
   const { name, email, subject, message } = req.body;
