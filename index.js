@@ -64,13 +64,19 @@ app.post("/api/careers", upload.single("cv"), async (req, res) => {
 
     await newApplication.save();
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      }
-    });
+   const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  },
+  tls: {
+    rejectUnauthorized: false
+  },
+  family: 4
+});
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
@@ -130,14 +136,19 @@ app.post("/api/contact", async (req, res) => {
     await newContact.save();
 
     // ✅ Send Email
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
+   const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  },
+  tls: {
+    rejectUnauthorized: false
+  },
+  family: 4
+});
     try {
   await transporter.sendMail({
     from: process.env.EMAIL_USER,
