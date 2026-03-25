@@ -5,6 +5,7 @@ import multer from "multer";
 import mongoose from "mongoose";
 import Application from "./models/Application.js";
 import Contact from "./models/Contact.js";
+import fs from "fs";
 import SibApiV3Sdk from "sib-api-v3-sdk";
 dotenv.config();
 
