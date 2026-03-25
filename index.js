@@ -1,20 +1,25 @@
 import express from "express";
 import cors from "cors";
-import bodyParser from "body-parser";
-import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import multer from "multer";
 import mongoose from "mongoose";
 import Application from "./models/Application.js";
 import Contact from "./models/Contact.js";
+import SibApiV3Sdk from "sib-api-v3-sdk";
 dotenv.config();
 
+const client = SibApiV3Sdk.ApiClient.instance;
+
+const apiKey = client.authentications["api-key"];
+apiKey.apiKey = process.env.BREVO_API_KEY;
+
+const tranEmailApi = new SibApiV3Sdk.TransactionalEmailsApi();
 const app = express();
 app.use(express.json());
 const upload = multer({ dest: "uploads/" });
 app.use(cors({
   origin: [
-    "http://localhost:5173",
+    // "http://localhost:5173",
     "https://vesqon.com",
     "https://www.vesqon.com"
   ],
@@ -39,8 +44,7 @@ app.post("/api/careers", upload.single("cv"), async (req, res) => {
   }
 
   try {
-
-    // ⭐ SAVE TO MONGODB
+    // ✅ Save to MongoDB
     const newApplication = new Application({
       name,
       email,
@@ -56,45 +60,34 @@ app.post("/api/careers", upload.single("cv"), async (req, res) => {
 
     await newApplication.save();
 
-  const transporter = nodemailer.createTransport({
-  host: "smtp-relay.brevo.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
-
-    const mailOptions = {
-      from: "vgweb20@gmail.com",
-      to: process.env.EMAIL_TO,
-      subject: "New Career Application",
-      text: `
+    // ✅ Send Email via Brevo API
+    try {
+      await tranEmailApi.sendTransacEmail({
+        sender: {
+          email: "vgweb20@gmail.com",
+          name: "Vesqon"
+        },
+        to: [
+          { email: process.env.EMAIL_TO }
+        ],
+        subject: "New Career Application",
+         replyTo: { email: email },
+        textContent: `
 Name: ${name}
 Email: ${email}
 Phone: ${phone}
 
 Address:
 ${street}, ${apartment}, ${city}, ${state}, ${zip}, ${country}
-`,
-      attachments: file
-        ? [
-            {
-              filename: file.originalname,
-              path: file.path
-            }
-          ]
-        : []
-    };
+`
+      });
 
-    try {
-  await transporter.sendMail(mailOptions);
-  console.log("✅ Career email sent");
-} catch (emailError) {
-  console.error("❌ Career email failed:", emailError);
-  return res.status(500).json({ message: "Email sending failed" });
-}
+      console.log("✅ Career email sent");
+
+    } catch (emailError) {
+      console.error("❌ Career email failed:", emailError);
+      return res.status(500).json({ message: "Email sending failed" });
+    }
 
     res.json({ message: "Application sent successfully!" });
 
@@ -102,7 +95,6 @@ ${street}, ${apartment}, ${city}, ${state}, ${zip}, ${country}
     console.error(err);
     res.status(500).json({ message: "Something went wrong." });
   }
-
 });
 
 app.post("/api/contact", async (req, res) => {
@@ -123,36 +115,33 @@ app.post("/api/contact", async (req, res) => {
 
     await newContact.save();
 
-    // ✅ Send Email
-  const transporter = nodemailer.createTransport({
-  host: "smtp-relay.brevo.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
+    // ✅ Send Email via Brevo API
     try {
-  await transporter.sendMail({
-  from: "vgweb20@gmail.com",
-    to: process.env.EMAIL_TO,
-    subject: `Contact Form: ${subject || "No Subject"}`,
-    text: `
+      await tranEmailApi.sendTransacEmail({
+        sender: {
+          email: "vgweb20@gmail.com",
+          name: "Vesqon"
+        },
+        to: [
+          { email: process.env.EMAIL_TO }
+        ],
+        subject: `Contact Form: ${subject || "No Subject"}`,
+        replyTo: { email: email }, 
+        textContent: `
 Name: ${name}
 Email: ${email}
 
 Message:
 ${message}
-`,
-  });
+`
+      });
 
-  console.log("✅ Email sent successfully");
+      console.log("✅ Email sent successfully");
 
-} catch (emailError) {
-  console.error("❌ Email failed:", emailError);
-  return res.status(500).json({ message: "Email sending failed" });
-}
+    } catch (emailError) {
+      console.error("❌ Email failed:", emailError);
+      return res.status(500).json({ message: "Email sending failed" });
+    }
 
     res.status(200).json({ message: "Message sent & saved successfully!" });
 
