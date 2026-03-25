@@ -12,23 +12,23 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 const upload = multer({ dest: "uploads/" });
-app.use(cors({
-  origin: function (origin, callback) {
-    const allowedOrigins = [
-       "http://localhost:5173",  
-      "https://vesqon.com",
-      "https://www.vesqon.com"
-    ];
+// app.use(cors({
+//   origin: function (origin, callback) {
+//     const allowedOrigins = [
+//        "http://localhost:5173",  
+//       "https://vesqon.com",
+//       "https://www.vesqon.com"
+//     ];
 
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("CORS not allowed"));
-    }
-  },
-  credentials: true
-}));
-
+//     if (!origin || allowedOrigins.includes(origin)) {
+//       callback(null, true);
+//     } else {
+//       callback(new Error("CORS not allowed"));
+//     }
+//   },
+//   credentials: true
+// }));
+app.use(cors()); // ✅ TEMP FIX
 mongoose.connect(process.env.MONGO_URI, {
   family: 4
 })
